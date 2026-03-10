@@ -1,41 +1,38 @@
 #!/usr/bin/env python3
 """
 JukePhone - modes/parrot.py
-* para grabar, # para reproducir
+Mantener * apretado para grabar, soltar para parar.
+# para reproducir (se puede repetir).
 """
 
 import os
 import subprocess
 import time
-from audio import grabar, AUDIO_DEVICE_OUT, SAMPLE_RATE
+from audio import grabar, AUDIO_DEVICE_OUT
 
 _proceso = None
 _archivo = None
 _grabando = False
 
 def on_modo_activado():
-    print("[LORO] * para grabar  |  # para reproducir")
+    print("[LORO] Mantené * para grabar  |  # para reproducir")
 
 def on_modo_desactivado():
     _detener()
 
-def on_tecla(tecla):
-    global _grabando
-    if tecla == '*':
-        _iniciar_grabacion()
-    elif tecla == '#':
-        _reproducir()
-
-def _iniciar_grabacion():
+def iniciar_grabacion():
     global _proceso, _archivo, _grabando
     _detener()
     _archivo, _proceso = grabar()
     _grabando = True
-    print("[LORO] Grabando... apretá * de nuevo para parar")
+    print("[LORO] Grabando...")
 
-def _reproducir():
-    global _proceso, _archivo, _grabando
-    # Si está grabando, detener primero
+def detener_grabacion():
+    _detener()
+    print("[LORO] Listo. Apretá # para reproducir.")
+
+def reproducir():
+    global _archivo, _grabando
     if _grabando:
         _detener()
         time.sleep(0.3)

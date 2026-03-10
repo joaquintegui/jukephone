@@ -29,12 +29,13 @@ def activar_modo(nuevo, actual):
 def main():
     hw = JukePhoneHardware()
 
-    modo_actual    = None
-    numero_marcado = ''
-    tecla_anterior = None
-    ultimo_tiempo  = 0
-    am1_anterior   = False
-    am2_anterior   = False
+    modo_actual           = None
+    numero_marcado        = ''
+    tecla_anterior        = None
+    ultimo_tiempo         = 0
+    am1_anterior          = False
+    am2_anterior          = False
+    loro_asterisco_activo = False
 
     print("=" * 40)
     print("  JukePhone - Listo")
@@ -51,8 +52,9 @@ def main():
                     modo_nuevo = modos_apretados[0]
                     if modo_nuevo != modo_actual:
                         activar_modo(modo_nuevo, modo_actual)
-                        modo_actual    = modo_nuevo
-                        numero_marcado = ''
+                        modo_actual           = modo_nuevo
+                        numero_marcado        = ''
+                        loro_asterisco_activo = False
                         time.sleep(0.4)
                         continue
             except Exception as e:
@@ -79,6 +81,16 @@ def main():
             except Exception as e:
                 print(f"[MAIN] Error teclado: {e}")
                 tecla = None
+
+            # ── Loro: detección hold/release de * ────────────────────────────
+            if modo_actual == 3:
+                asterisco_ahora = (tecla == '*')
+                if asterisco_ahora and not loro_asterisco_activo:
+                    loro_asterisco_activo = True
+                    parrot.iniciar_grabacion()
+                elif not asterisco_ahora and loro_asterisco_activo:
+                    loro_asterisco_activo = False
+                    parrot.detener_grabacion()
 
             if tecla and (tecla != tecla_anterior or ahora - ultimo_tiempo > 0.3):
                 tecla_anterior = tecla
@@ -107,7 +119,8 @@ def main():
                         debug_mode.on_tecla(tecla)
 
                     elif modo_actual == 3:
-                        parrot.on_tecla(tecla)
+                        if tecla == '#':
+                            parrot.reproducir()
 
                     elif modo_actual == 4:
                         beep_dtmf(tecla)
