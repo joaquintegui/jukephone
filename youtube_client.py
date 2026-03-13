@@ -45,7 +45,24 @@ class YouTubeClient:
         except OSError:
             pass
 
-        search = f"ytsearch15:{query}"
+        # yt-dlp busca y devuelve URLs reales de YouTube
+        try:
+            resultado = subprocess.run(
+                [
+                    'yt-dlp',
+                    '--flat-playlist',
+                    '--print', 'https://youtube.com/watch?v=%(id)s',
+                    f'ytsearch15:{query}',
+                ],
+                capture_output=True, text=True, timeout=30,
+            )
+            urls = [u for u in resultado.stdout.strip().splitlines() if u.startswith('http')]
+        except Exception as e:
+            return False, f"yt-dlp error: {e}"
+
+        if not urls:
+            return False, "Sin resultados"
+
         cmd = [
             'mpv',
             '--no-video',
@@ -53,8 +70,7 @@ class YouTubeClient:
             f'--input-ipc-server={SOCKET_PATH}',
             '--ytdl-format=bestaudio[ext=m4a]/bestaudio/best',
             '--msg-level=all=warn',
-            search,
-        ]
+        ] + urls
         try:
             self._proceso = subprocess.Popen(cmd)
             return True, query
