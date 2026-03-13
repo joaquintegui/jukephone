@@ -3,22 +3,29 @@
 JukePhone - spotify_client.py
 
 Setup inicial (una sola vez):
-  1. Crear app en https://developer.spotify.com/dashboard
-     - Redirect URI: http://localhost:8888/callback
-  2. Exportar credenciales en la Raspberry (agregar a ~/.bashrc o ~/.profile):
+  1. En https://developer.spotify.com/dashboard → tu app → Edit settings
+     Agregar redirect URI: http://127.0.0.1:8888/callback
+     (escribirlo manualmente y hacer clic en Add, luego Save)
+
+  2. Exportar credenciales en la Raspberry (agregar a ~/.bashrc):
        export SPOTIPY_CLIENT_ID="tu_client_id"
-       export SPOTIPY_CLIENT_SECRET="tu_client_secret"
-       export SPOTIPY_REDIRECT_URI="http://localhost:8888/callback"
+       export SPOTIPY_REDIRECT_URI="http://127.0.0.1:8888/callback"
+     (PKCE no necesita client_secret)
+     Luego: source ~/.bashrc
+
   3. Correr una vez para autenticar:
        python3 spotify_client.py
-     Copiar la URL que aparece, abrirla en un navegador, y pegar la URL
-     de redirección de vuelta en la terminal.
+     - Abre la URL que aparece en un navegador
+     - Spotify redirige a http://127.0.0.1:8888/callback?code=...
+       (puede mostrar "sitio no disponible" — eso es normal)
+     - Copiá la URL completa de la barra del navegador y pegala en la terminal
+
   4. El token queda cacheado en ~/.jukephone_spotify_cache y se renueva solo.
 """
 
 import os
 import spotipy
-from spotipy.oauth2 import SpotifyOAuth
+from spotipy.oauth2 import SpotifyPKCE
 
 SCOPE = (
     'user-read-playback-state '
@@ -26,7 +33,8 @@ SCOPE = (
     'user-read-currently-playing'
 )
 CACHE_PATH   = os.path.expanduser('~/.jukephone_spotify_cache')
-DEVICE_NAME  = 'jukephone'   # debe coincidir con el nombre configurado en raspotify
+REDIRECT_URI = 'http://127.0.0.1:8888/callback'
+DEVICE_NAME  = 'jukephone'
 VOLUME_STEP  = 10
 
 
@@ -38,9 +46,10 @@ class SpotifyClient:
 
     def _conectar(self):
         if self._sp is None:
-            self._sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
+            self._sp = spotipy.Spotify(auth_manager=SpotifyPKCE(
                 scope=SCOPE,
                 cache_path=CACHE_PATH,
+                redirect_uri=REDIRECT_URI,
                 open_browser=False,
             ))
         return self._sp
