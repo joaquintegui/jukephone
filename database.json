@@ -1,9 +1,9 @@
 {
   "artists": {
-    "1234567": "The Beatles",
-    "2345678": "Pink Floyd",
-    "3456789": "Led Zeppelin",
-    "4567890": "David Bowie",
-    "5678901": "Radiohead"
+    "12345678": "The Beatles",
+    "23456789": "Pink Floyd",
+    "34567890": "Led Zeppelin",
+    "45678901": "David Bowie",
+    "56789012": "Radiohead"
   }
 }

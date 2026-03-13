@@ -38,7 +38,7 @@ TECLAS = [
 PIN_MODO = {1: 23, 2: 24, 3: 26, 4: 9}
 
 # ── Hook switch ───────────────────────────────────────────────────────────────
-# PIN_HOOK = 4  # Verde → físico 7 | Negro → GND físico 6
+PIN_HOOK = 4  # Verde → físico 7 | Negro → GND físico 6
 
 # ── Botones amarillos ─────────────────────────────────────────────────────────
 PIN_AMARILLO_1 = 17   # Blanco → físico 11
@@ -64,8 +64,8 @@ class JukePhoneHardware:
         # Amarillos
         GPIO.setup(PIN_AMARILLO_1, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         GPIO.setup(PIN_AMARILLO_2, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        # Hook (comentado)
-        # GPIO.setup(PIN_HOOK, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        # Hook
+        GPIO.setup(PIN_HOOK, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
     def leer_tecla(self):
         for cable_a, cable_b, tecla in TECLAS:
@@ -92,8 +92,8 @@ class JukePhoneHardware:
     def leer_amarillo_2(self):
         return GPIO.input(PIN_AMARILLO_2) == GPIO.LOW
 
-    # def auricular_descolgado(self):
-    #     return GPIO.input(PIN_HOOK) == GPIO.LOW
+    def auricular_descolgado(self):
+        return GPIO.input(PIN_HOOK) == GPIO.LOW
 
     def cleanup(self):
         GPIO.cleanup()

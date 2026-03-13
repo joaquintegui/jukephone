@@ -1,40 +1,73 @@
 #!/usr/bin/env python3
 """
 JukePhone - modes/music.py
+Modo música: marcar 8 dígitos → busca artista en database.json → reproduce en Spotify.
 """
 
 import json
 import os
-import subprocess
-from audio import beep
+from audio import beep, hablar_bg
+from spotify_client import SpotifyClient
 
-DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'database.json')
+DB_PATH     = os.path.join(os.path.dirname(__file__), '..', 'database.json')
+VOLUME_STEP = 10
 
-def cargar_database():
+_spotify = SpotifyClient()
+
+
+def _cargar_database():
     with open(DB_PATH, 'r') as f:
         return json.load(f)['artists']
 
-def llamar_artista(numero):
-    try:
-        db = cargar_database()
-        artista = db.get(numero)
-        if not artista:
-            print(f"[MÚSICA] {numero} no encontrado — marcá otro número")
-            beep(frecuencia=200, duracion=0.3)
-            return False
-        print(f"[MÚSICA] Encontrado: {artista}")
-        # Anunciar en background para no bloquear
-        subprocess.Popen(
-            ['espeak', '-v', 'es', '-s', '140', f"Llamando a {artista}"],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        )
-        # TODO: Spotify
-        print(f"[MÚSICA] TODO: reproducir {artista} en Spotify")
-        return True
-    except Exception as e:
-        print(f"[MÚSICA] Error: {e}")
-        return False
+
+def on_modo_activado():
+    print("[MÚSICA] Modo activo — marcá 8 dígitos para llamar a un artista")
+
+
+def on_modo_desactivado():
+    pass
+
 
 def on_numero_marcado(numero):
     print(f"[MÚSICA] Número: {numero}")
-    return llamar_artista(numero)
+    try:
+        db      = _cargar_database()
+        artista = db.get(numero)
+        if not artista:
+            print(f"[MÚSICA] {numero} no encontrado en database.json")
+            beep(frecuencia=200, duracion=0.3)
+            return False
+
+        print(f"[MÚSICA] Llamando a: {artista}")
+        hablar_bg(f"Llamando a {artista}")
+
+        ok, msg = _spotify.buscar_y_reproducir(artista)
+        if ok:
+            print(f"[MÚSICA] Reproduciendo: {msg}")
+        else:
+            print(f"[MÚSICA] Error Spotify: {msg}")
+            beep(frecuencia=200, duracion=0.3)
+        return ok
+
+    except Exception as e:
+        print(f"[MÚSICA] Error: {e}")
+        beep(frecuencia=200, duracion=0.3)
+        return False
+
+
+# ── Controles de reproducción (llamados desde main.py) ──────────────────────
+
+def play_pause():
+    _spotify.play_pause()
+
+def siguiente():
+    _spotify.siguiente()
+
+def anterior():
+    _spotify.anterior()
+
+def subir_volumen():
+    _spotify.cambiar_volumen(+VOLUME_STEP)
+
+def bajar_volumen():
+    _spotify.cambiar_volumen(-VOLUME_STEP)

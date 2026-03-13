@@ -1,30 +1,48 @@
 #!/usr/bin/env python3
 """
 JukePhone - main.py
+
+Controles:
+  Amarillo 1          → Modo música
+  Amarillo 2          → Modo juegos (loro)
+  Negro 1             → Play / Pause
+  Negro 2             → Siguiente canción
+  Negro 3             → Canción anterior
+  Negro 4 + Negro 2   → Subir volumen
+  Negro 4 + Negro 3   → Bajar volumen
+  Hook (colgar)       → Audio por bluetooth
+  Hook (descolgar)    → Audio por auricular / marcar artistas
+  Teclado 8 dígitos   → Llamar artista (modo música, auricular levantado)
 """
 
 import time
 from hardware import JukePhoneHardware
 from audio import beep, beep_dtmf
-from modes import music, debug_mode, parrot, misc
+from modes import music, parrot
+import bluetooth_manager
 
-LONGITUD_NUMERO = 7
-HANDLERS = {1: music, 2: debug_mode, 3: parrot, 4: misc}
+LONGITUD_NUMERO = 8
+
+MODOS = {
+    'musica': music,
+    'juegos': parrot,
+}
+
 
 def activar_modo(nuevo, actual):
     try:
-        if actual is not None and actual in HANDLERS:
-            if hasattr(HANDLERS[actual], 'on_modo_desactivado'):
-                HANDLERS[actual].on_modo_desactivado()
+        if actual in MODOS and hasattr(MODOS[actual], 'on_modo_desactivado'):
+            MODOS[actual].on_modo_desactivado()
     except Exception as e:
-        print(f"[MAIN] Error desactivando modo {actual}: {e}")
+        print(f"[MAIN] Error desactivando {actual}: {e}")
     try:
-        if nuevo is not None and nuevo in HANDLERS:
-            print(f"[MAIN] Modo {nuevo} activado")
-            if hasattr(HANDLERS[nuevo], 'on_modo_activado'):
-                HANDLERS[nuevo].on_modo_activado()
+        if nuevo in MODOS:
+            print(f"[MAIN] Modo: {nuevo}")
+            if hasattr(MODOS[nuevo], 'on_modo_activado'):
+                MODOS[nuevo].on_modo_activado()
     except Exception as e:
-        print(f"[MAIN] Error activando modo {nuevo}: {e}")
+        print(f"[MAIN] Error activando {nuevo}: {e}")
+
 
 def main():
     hw = JukePhoneHardware()
@@ -35,6 +53,8 @@ def main():
     ultimo_tiempo         = 0
     am1_anterior          = False
     am2_anterior          = False
+    hook_anterior         = False
+    modos_anteriores      = []
     loro_asterisco_activo = False
 
     print("=" * 40)
@@ -45,45 +65,72 @@ def main():
         while True:
             ahora = time.time()
 
-            # ── Botones de modo — máxima prioridad ────────────────────────────
+            # ── Botones negros — reproducción ──────────────────────────────
             try:
-                modos_apretados = hw.leer_modos()
-                if modos_apretados:
-                    modo_nuevo = modos_apretados[0]
-                    if modo_nuevo != modo_actual:
-                        activar_modo(modo_nuevo, modo_actual)
-                        modo_actual           = modo_nuevo
-                        numero_marcado        = ''
-                        loro_asterisco_activo = False
-                        time.sleep(0.4)
-                        continue
-            except Exception as e:
-                print(f"[MAIN] Error modos: {e}")
-                modo_actual = None
+                modos  = hw.leer_modos()
+                nuevos = [m for m in modos if m not in modos_anteriores]
 
-            # ── Botones amarillos ─────────────────────────────────────────────
+                if nuevos:
+                    if   2 in nuevos and 4 in modos:  music.subir_volumen()
+                    elif 3 in nuevos and 4 in modos:  music.bajar_volumen()
+                    elif 1 in nuevos and 4 not in modos: music.play_pause()
+                    elif 2 in nuevos and 4 not in modos: music.siguiente()
+                    elif 3 in nuevos and 4 not in modos: music.anterior()
+
+                modos_anteriores = modos
+            except Exception as e:
+                print(f"[MAIN] Error botones negros: {e}")
+                modos_anteriores = []
+
+            # ── Botones amarillos — selector de modo ───────────────────────
             try:
                 am1 = hw.leer_amarillo_1()
                 if am1 and not am1_anterior:
-                    misc.on_amarillo_1()
+                    if modo_actual != 'musica':
+                        activar_modo('musica', modo_actual)
+                        modo_actual           = 'musica'
+                        numero_marcado        = ''
+                        loro_asterisco_activo = False
                 am1_anterior = am1
 
                 am2 = hw.leer_amarillo_2()
                 if am2 and not am2_anterior:
-                    misc.on_amarillo_2()
+                    if modo_actual != 'juegos':
+                        activar_modo('juegos', modo_actual)
+                        modo_actual           = 'juegos'
+                        numero_marcado        = ''
+                        loro_asterisco_activo = False
                 am2_anterior = am2
             except Exception as e:
                 print(f"[MAIN] Error amarillos: {e}")
 
-            # ── Teclado ───────────────────────────────────────────────────────
+            # ── Hook switch — enrutamiento de audio ────────────────────────
+            try:
+                hook = hw.auricular_descolgado()
+                if hook != hook_anterior:
+                    if hook:
+                        # Auricular levantado → audio al auricular
+                        bluetooth_manager.switch_to_handset()
+                        print("[MAIN] Auricular levantado")
+                    else:
+                        # Colgado → conectar BT y rutear audio
+                        print("[MAIN] Auricular colgado")
+                        if bluetooth_manager.BT_MAC:
+                            bluetooth_manager.connect()
+                            bluetooth_manager.switch_to_bluetooth()
+                    hook_anterior = hook
+            except Exception as e:
+                print(f"[MAIN] Error hook: {e}")
+
+            # ── Teclado ────────────────────────────────────────────────────
             try:
                 tecla = hw.leer_tecla()
             except Exception as e:
                 print(f"[MAIN] Error teclado: {e}")
                 tecla = None
 
-            # ── Loro: detección hold/release de * ────────────────────────────
-            if modo_actual == 3:
+            # Loro: detección hold/release de *
+            if modo_actual == 'juegos':
                 asterisco_ahora = (tecla == '*')
                 if asterisco_ahora and not loro_asterisco_activo:
                     loro_asterisco_activo = True
@@ -99,9 +146,9 @@ def main():
                 try:
                     if modo_actual is None:
                         beep(frecuencia=300, duracion=0.1)
-                        print("[MAIN] Seleccioná un modo primero")
+                        print("[MAIN] Seleccioná un modo (amarillo 1=música, 2=juegos)")
 
-                    elif modo_actual == 1:
+                    elif modo_actual == 'musica':
                         if tecla == '*':
                             numero_marcado = numero_marcado[:-1]
                             beep(frecuencia=300, duracion=0.1)
@@ -114,20 +161,12 @@ def main():
                                 music.on_numero_marcado(numero_marcado)
                                 numero_marcado = ''
 
-                    elif modo_actual == 2:
-                        print(f"[DEBUG] Tecla: {tecla}")
-                        debug_mode.on_tecla(tecla)
-
-                    elif modo_actual == 3:
+                    elif modo_actual == 'juegos':
                         if tecla == '#':
                             parrot.reproducir()
 
-                    elif modo_actual == 4:
-                        beep_dtmf(tecla)
-
                 except Exception as e:
                     print(f"[MAIN] Error modo {modo_actual}: {e}")
-                    modo_actual    = None
                     numero_marcado = ''
 
             if not tecla:
@@ -139,11 +178,12 @@ def main():
         print("\nApagando JukePhone...")
     finally:
         try:
-            if modo_actual in HANDLERS and hasattr(HANDLERS[modo_actual], 'on_modo_desactivado'):
-                HANDLERS[modo_actual].on_modo_desactivado()
+            if modo_actual in MODOS and hasattr(MODOS[modo_actual], 'on_modo_desactivado'):
+                MODOS[modo_actual].on_modo_desactivado()
         except:
             pass
         hw.cleanup()
+
 
 if __name__ == '__main__':
     main()
