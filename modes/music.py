@@ -6,11 +6,17 @@ Modo música: marcar 8 dígitos → busca artista en database.json → reproduce
 
 import json
 import os
+import sys
+import threading
 from audio import beep, hablar_bg
 from youtube_client import YouTubeClient
 
-DB_PATH     = os.path.join(os.path.dirname(__file__), '..', 'database.json')
-VOLUME_STEP = 10
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+import sync_database
+
+DB_PATH      = os.path.join(os.path.dirname(__file__), '..', 'database.json')
+VOLUME_STEP  = 10
+CODIGO_SYNC  = '12345678'
 
 _spotify = YouTubeClient()
 
@@ -30,6 +36,13 @@ def on_modo_desactivado():
 
 def on_numero_marcado(numero):
     print(f"[MÚSICA] Número: {numero}")
+
+    if numero == CODIGO_SYNC:
+        print("[MÚSICA] Sincronizando agenda...")
+        hablar_bg("Actualizando agenda")
+        threading.Thread(target=sync_database.sync, daemon=True).start()
+        return True
+
     try:
         db      = _cargar_database()
         artista = db.get(numero)
