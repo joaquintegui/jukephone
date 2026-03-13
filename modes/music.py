@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
 JukePhone - modes/music.py
-Modo música: marcar 8 dígitos → busca artista en database.json → reproduce en Spotify.
+Modo música: marcar 8 dígitos → busca artista en database.json → reproduce en YouTube.
 """
 
 import json
 import os
 from audio import beep, hablar_bg
-from spotify_client import SpotifyClient
+from youtube_client import YouTubeClient
 
 DB_PATH     = os.path.join(os.path.dirname(__file__), '..', 'database.json')
 VOLUME_STEP = 10
 
-_spotify = SpotifyClient()
+_spotify = YouTubeClient()
 
 
 def _cargar_database():
@@ -45,7 +45,7 @@ def on_numero_marcado(numero):
         if ok:
             print(f"[MÚSICA] Reproduciendo: {msg}")
         else:
-            print(f"[MÚSICA] Error Spotify: {msg}")
+            print(f"[MÚSICA] Error YouTube: {msg}")
             beep(frecuencia=200, duracion=0.3)
         return ok
 
