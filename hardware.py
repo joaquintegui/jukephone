@@ -68,13 +68,21 @@ class JukePhoneHardware:
         GPIO.setup(PIN_HOOK, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
     def leer_tecla(self):
+        primera = self._scan_tecla()
+        if not primera:
+            return None
+        time.sleep(0.008)   # 8ms debounce
+        segunda = self._scan_tecla()
+        return primera if primera == segunda else None
+
+    def _scan_tecla(self):
         for cable_a, cable_b, tecla in TECLAS:
             pin_a = PINES_TECLADO[cable_a]
             pin_b = PINES_TECLADO[cable_b]
             GPIO.setup(pin_a, GPIO.OUT)
             GPIO.output(pin_a, GPIO.LOW)
             GPIO.setup(pin_b, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-            time.sleep(0.001)
+            time.sleep(0.002)
             detectado = GPIO.input(pin_b) == GPIO.LOW
             GPIO.output(pin_a, GPIO.HIGH)
             GPIO.setup(pin_a, GPIO.IN, pull_up_down=GPIO.PUD_UP)

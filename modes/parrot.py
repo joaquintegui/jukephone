@@ -8,7 +8,8 @@ Mantener * apretado para grabar, soltar para parar.
 import os
 import subprocess
 import time
-from audio import grabar, AUDIO_DEVICE_OUT
+import audio
+from audio import grabar
 
 _proceso = None
 _archivo = None
@@ -45,7 +46,7 @@ def reproducir():
     print(f"[LORO] Reproduciendo ({size} bytes)...")
 
     ret = subprocess.run(
-        ['aplay', '-D', AUDIO_DEVICE_OUT, _archivo],
+        ['aplay', '-D', audio.AUDIO_DEVICE_OUT, _archivo],
         stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     if ret.returncode != 0:

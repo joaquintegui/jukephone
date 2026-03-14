@@ -14,6 +14,7 @@ import json
 import os
 import socket
 import subprocess
+import audio
 
 SOCKET_PATH = '/tmp/jukephone-mpv.sock'
 VOLUME_STEP  = 10
@@ -66,7 +67,7 @@ class YouTubeClient:
         cmd = [
             'mpv',
             '--no-video',
-            '--audio-device=alsa/default',
+            f'--audio-device=alsa/{audio.AUDIO_DEVICE_OUT}',
             f'--input-ipc-server={SOCKET_PATH}',
             '--ytdl-format=bestaudio[ext=m4a]/bestaudio/best',
             '--msg-level=all=warn',

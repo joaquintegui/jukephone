@@ -11,8 +11,15 @@ import wave
 import struct
 import math
 
-AUDIO_DEVICE_IN  = 'hw:2,0'
-AUDIO_DEVICE_OUT = 'plughw:2,0'
+AUDIO_DEVICE_IN   = 'hw:2,0'
+AUDIO_DEVICE_OUT  = 'plughw:2,0'   # tubo (auricular)
+DEVICE_TUBO       = 'plughw:2,0'
+DEVICE_PARLANTE   = 'plughw:1,0'   # parlante externo (jack 3.5mm Pi)
+
+def set_salida(device):
+    global AUDIO_DEVICE_OUT
+    AUDIO_DEVICE_OUT = device
+    print(f"[AUDIO] Salida → {device}")
 SAMPLE_RATE      = 44100
 
 DTMF_FREQS = {

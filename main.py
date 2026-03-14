@@ -17,7 +17,7 @@ Controles:
 
 import time
 from hardware import JukePhoneHardware
-from audio import beep, beep_dtmf
+from audio import beep, beep_dtmf, set_salida, DEVICE_PARLANTE, DEVICE_TUBO
 from modes import music, parrot
 import bluetooth_manager
 
@@ -86,6 +86,7 @@ def main():
             try:
                 am1 = hw.leer_amarillo_1()
                 if am1 and not am1_anterior:
+                    set_salida(DEVICE_PARLANTE)
                     if modo_actual != 'musica':
                         activar_modo('musica', modo_actual)
                         modo_actual           = 'musica'
@@ -95,6 +96,7 @@ def main():
 
                 am2 = hw.leer_amarillo_2()
                 if am2 and not am2_anterior:
+                    set_salida(DEVICE_TUBO)
                     if modo_actual != 'juegos':
                         activar_modo('juegos', modo_actual)
                         modo_actual           = 'juegos'
