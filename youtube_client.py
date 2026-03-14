@@ -65,6 +65,8 @@ class YouTubeClient:
         cmd = [
             'mpv',
             '--no-video',
+            '--loop=no',
+            '--loop-playlist=no',
             f'--audio-device=alsa/{audio.AUDIO_DEVICE_OUT}',
             f'--input-ipc-server={SOCKET_PATH}',
             '--ytdl-format=bestaudio[ext=m4a]/bestaudio/best',
