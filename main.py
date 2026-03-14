@@ -15,7 +15,9 @@ Controles:
   Teclado 8 dígitos   → Llamar artista (modo música, auricular levantado)
 """
 
+import sys
 import time
+sys.stdout.reconfigure(line_buffering=True)
 from hardware import JukePhoneHardware
 from audio import beep, beep_dtmf, set_salida, DEVICE_PARLANTE, DEVICE_TUBO
 from modes import music, parrot

@@ -71,9 +71,13 @@ class JukePhoneHardware:
         primera = self._scan_tecla()
         if not primera:
             return None
-        time.sleep(0.008)   # 8ms debounce
+        time.sleep(0.020)   # 20ms debounce
         segunda = self._scan_tecla()
-        return primera if primera == segunda else None
+        if primera != segunda:
+            return None
+        time.sleep(0.020)
+        tercera = self._scan_tecla()
+        return primera if primera == tercera else None
 
     def _scan_tecla(self):
         for cable_a, cable_b, tecla in TECLAS:

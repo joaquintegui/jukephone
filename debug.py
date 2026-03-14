@@ -4,7 +4,9 @@ JukePhone - debug.py
 Muestra qué botón se presionó. Salir con Ctrl+C.
 """
 
+import sys
 import time
+sys.stdout.reconfigure(line_buffering=True)
 import RPi.GPIO as GPIO
 from hardware import JukePhoneHardware, PIN_HOOK, PIN_AMARILLO_1, PIN_AMARILLO_2, PIN_MODO
 
