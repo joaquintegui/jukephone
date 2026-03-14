@@ -72,13 +72,20 @@ def on_numero_marcado(numero):
         stop = threading.Event()
         threading.Thread(target=_ring_loop, args=(stop,), daemon=True).start()
 
-        ok, msg = _spotify.buscar_y_reproducir(artista)
-        stop.set()
+        # yt-dlp busca mientras suena el ring
+        urls = _spotify.buscar_urls(artista)
+        stop.set()   # para el ring — yt-dlp ya terminó, mpv empieza ya
 
+        if not urls:
+            print(f"[MÚSICA] Sin resultados para: {artista}")
+            beep(frecuencia=200, duracion=0.3)
+            return False
+
+        ok = _spotify.reproducir_urls(urls)
         if ok:
-            print(f"[MÚSICA] Reproduciendo: {msg}")
+            print(f"[MÚSICA] Reproduciendo: {artista}")
         else:
-            print(f"[MÚSICA] Error YouTube: {msg}")
+            print(f"[MÚSICA] Error iniciando mpv")
             beep(frecuencia=200, duracion=0.3)
         return ok
 

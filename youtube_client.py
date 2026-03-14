@@ -35,18 +35,8 @@ class YouTubeClient:
         except Exception as e:
             print(f"[YT] mpv IPC: {e}")
 
-    def buscar_y_reproducir(self, query):
-        # Terminar reproducción anterior
-        if self._proceso and self._proceso.poll() is None:
-            self._proceso.terminate()
-            self._proceso = None
-
-        try:
-            os.unlink(SOCKET_PATH)
-        except OSError:
-            pass
-
-        # yt-dlp busca y devuelve URLs reales de YouTube
+    def buscar_urls(self, query):
+        """Solo yt-dlp — devuelve lista de URLs sin iniciar reproducción."""
         try:
             resultado = subprocess.run(
                 [
@@ -57,12 +47,20 @@ class YouTubeClient:
                 ],
                 capture_output=True, text=True, timeout=30,
             )
-            urls = [u for u in resultado.stdout.strip().splitlines() if u.startswith('http')]
+            return [u for u in resultado.stdout.strip().splitlines() if u.startswith('http')]
         except Exception as e:
-            return False, f"yt-dlp error: {e}"
+            print(f"[YT] yt-dlp error: {e}")
+            return []
 
-        if not urls:
-            return False, "Sin resultados"
+    def reproducir_urls(self, urls):
+        """Inicia mpv con las URLs ya resueltas."""
+        if self._proceso and self._proceso.poll() is None:
+            self._proceso.terminate()
+            self._proceso = None
+        try:
+            os.unlink(SOCKET_PATH)
+        except OSError:
+            pass
 
         cmd = [
             'mpv',
@@ -74,9 +72,17 @@ class YouTubeClient:
         ] + urls
         try:
             self._proceso = subprocess.Popen(cmd)
-            return True, query
+            return True
         except Exception as e:
-            return False, str(e)
+            print(f"[YT] mpv error: {e}")
+            return False
+
+    def buscar_y_reproducir(self, query):
+        urls = self.buscar_urls(query)
+        if not urls:
+            return False, "Sin resultados"
+        ok = self.reproducir_urls(urls)
+        return ok, query
 
     def play_pause(self):
         self._mpv_send({"command": ["cycle", "pause"]})
