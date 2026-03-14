@@ -61,6 +61,16 @@ def beep(frecuencia=440, duracion=0.2):
     tmp = _generar_wav([frecuencia], duracion)
     _aplay(tmp, borrar=True)
 
+def beep_en(device, frecuencia=440, duracion=0.2):
+    """Beep en un device ALSA específico, ignorando AUDIO_DEVICE_OUT."""
+    tmp = _generar_wav([frecuencia], duracion)
+    subprocess.run(
+        ['aplay', '-D', device, tmp],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+    )
+    if os.path.exists(tmp):
+        os.remove(tmp)
+
 def reproducir_mp3(archivo):
     """Reproduce mp3 en background (música larga)"""
     return subprocess.Popen(

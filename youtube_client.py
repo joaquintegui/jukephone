@@ -84,6 +84,31 @@ class YouTubeClient:
         ok = self.reproducir_urls(urls)
         return ok, query
 
+    def esperar_inicio(self, timeout=15):
+        """Espera hasta que mpv esté reproduciendo de verdad (time-pos > 0)."""
+        import time as _time
+        inicio = _time.time()
+        while _time.time() - inicio < timeout:
+            try:
+                s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                s.settimeout(0.5)
+                s.connect(SOCKET_PATH)
+                s.send(json.dumps({"command": ["get_property", "time-pos"]}).encode() + b'\n')
+                resp = b''
+                while b'\n' not in resp:
+                    chunk = s.recv(256)
+                    if not chunk:
+                        break
+                    resp += chunk
+                s.close()
+                data = json.loads(resp.decode().split('\n')[0])
+                if isinstance(data.get('data'), (int, float)) and data['data'] > 0:
+                    return True
+            except Exception:
+                pass
+            _time.sleep(0.3)
+        return False
+
     def play_pause(self):
         self._mpv_send({"command": ["cycle", "pause"]})
 

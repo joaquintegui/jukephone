@@ -9,7 +9,7 @@ import os
 import sys
 import threading
 import time
-from audio import beep, hablar_bg
+from audio import beep, beep_en, hablar_bg, DEVICE_TUBO
 from youtube_client import YouTubeClient
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -36,17 +36,17 @@ def on_modo_desactivado():
 
 
 def _ring_loop(stop):
-    """Tono de llamada: dos pulsos cortos, pausa larga. Para cuando stop se activa."""
+    """Tono de llamada siempre en el tubo — así no conflictúa con mpv en el parlante."""
     time.sleep(0.8)   # esperar que termine el espeak "Llamando a..."
     while not stop.is_set():
-        beep(frecuencia=480, duracion=0.35)
+        beep_en(DEVICE_TUBO, frecuencia=480, duracion=0.35)
         if stop.is_set():
             break
         time.sleep(0.15)
-        beep(frecuencia=480, duracion=0.35)
+        beep_en(DEVICE_TUBO, frecuencia=480, duracion=0.35)
         if stop.is_set():
             break
-        time.sleep(1.8)   # pausa entre timbrazos
+        time.sleep(1.8)
 
 
 def on_numero_marcado(numero):
@@ -72,19 +72,24 @@ def on_numero_marcado(numero):
         stop = threading.Event()
         threading.Thread(target=_ring_loop, args=(stop,), daemon=True).start()
 
-        # yt-dlp busca mientras suena el ring
+        # yt-dlp busca mientras suena el ring en el tubo
         urls = _spotify.buscar_urls(artista)
-        stop.set()   # para el ring — yt-dlp ya terminó, mpv empieza ya
 
         if not urls:
+            stop.set()
             print(f"[MÚSICA] Sin resultados para: {artista}")
             beep(frecuencia=200, duracion=0.3)
             return False
 
+        # Inicia mpv en el parlante — el ring sigue en el tubo sin conflicto
         ok = _spotify.reproducir_urls(urls)
         if ok:
+            # Espera que mpv empiece a reproducir de verdad, luego para el ring
+            _spotify.esperar_inicio(timeout=15)
             print(f"[MÚSICA] Reproduciendo: {artista}")
-        else:
+        stop.set()
+
+        if not ok:
             print(f"[MÚSICA] Error iniciando mpv")
             beep(frecuencia=200, duracion=0.3)
         return ok

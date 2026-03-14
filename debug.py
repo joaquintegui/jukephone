@@ -88,10 +88,15 @@ def main():
                         else:
                             negros_conf.discard(n)
 
-            # ── Teclado ───────────────────────────────────────────────────────
+            # ── Teclado (raw, pre-debounce) ───────────────────────────────────
+            tecla_raw_scan = hw._scan_tecla()
+            if tecla_raw_scan:
+                print(f"  RAW {tecla_raw_scan}", end='')
+
+            # Post-debounce (lo que realmente se registraría en main.py)
             tecla_raw = hw.leer_tecla()
             if tecla_raw != tecla_raw_prev:
-                tecla_cnt     = 1
+                tecla_cnt      = 1
                 tecla_raw_prev = tecla_raw
             else:
                 tecla_cnt += 1
@@ -100,7 +105,7 @@ def main():
                 if tecla_raw != tecla_conf:
                     tecla_conf = tecla_raw
                     if tecla_raw:
-                        print(f"Tecla: {tecla_raw}")
+                        print(f"  → CONFIRMADA: {tecla_raw}")
 
             time.sleep(0.05)
 
