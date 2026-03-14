@@ -71,13 +71,12 @@ class JukePhoneHardware:
         primera = self._scan_tecla()
         if not primera:
             return None
-        time.sleep(0.020)   # 20ms debounce
-        segunda = self._scan_tecla()
-        if primera != segunda:
-            return None
-        time.sleep(0.020)
-        tercera = self._scan_tecla()
-        return primera if primera == tercera else None
+        # Requiere 4 lecturas consecutivas idénticas con 60ms entre c/u (~240ms total)
+        for _ in range(3):
+            time.sleep(0.060)
+            if self._scan_tecla() != primera:
+                return None
+        return primera
 
     def _scan_tecla(self):
         for cable_a, cable_b, tecla in TECLAS:
@@ -86,7 +85,7 @@ class JukePhoneHardware:
             GPIO.setup(pin_a, GPIO.OUT)
             GPIO.output(pin_a, GPIO.LOW)
             GPIO.setup(pin_b, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-            time.sleep(0.002)
+            time.sleep(0.010)   # 10ms settle — reduce crosstalk
             detectado = GPIO.input(pin_b) == GPIO.LOW
             GPIO.output(pin_a, GPIO.HIGH)
             GPIO.setup(pin_a, GPIO.IN, pull_up_down=GPIO.PUD_UP)
