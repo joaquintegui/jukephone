@@ -36,18 +36,54 @@ class YouTubeClient:
             print(f"[YT] mpv IPC: {e}")
 
     def buscar_urls(self, query):
-        """Solo yt-dlp — devuelve lista de URLs sin iniciar reproducción."""
+        """Busca un mix/playlist del artista en YouTube Music — devuelve URLs de canciones."""
         try:
+            # Busca el primer resultado de playlist/mix para el artista
+            busqueda = subprocess.run(
+                [
+                    'yt-dlp',
+                    '--flat-playlist',
+                    '--print', '%(url)s\t%(ie_key)s',
+                    '--playlist-items', '1',
+                    f'ytsearch1:{query} mix',
+                ],
+                capture_output=True, text=True, timeout=30,
+            )
+            lineas = busqueda.stdout.strip().splitlines()
+            playlist_url = None
+            for linea in lineas:
+                partes = linea.split('\t')
+                if len(partes) >= 1:
+                    playlist_url = partes[0]
+                    break
+
+            if not playlist_url:
+                return []
+
+            # Extrae hasta 30 canciones de esa playlist/mix
             resultado = subprocess.run(
                 [
                     'yt-dlp',
                     '--flat-playlist',
                     '--print', 'https://youtube.com/watch?v=%(id)s',
-                    f'ytsearch15:{query}',
+                    '--playlist-items', '1-30',
+                    playlist_url,
                 ],
-                capture_output=True, text=True, timeout=30,
+                capture_output=True, text=True, timeout=45,
             )
-            return [u for u in resultado.stdout.strip().splitlines() if u.startswith('http')]
+            urls = [u for u in resultado.stdout.strip().splitlines() if u.startswith('http')]
+
+            # Fallback: búsqueda directa de canciones si no hubo playlist
+            if not urls:
+                resultado = subprocess.run(
+                    ['yt-dlp', '--flat-playlist',
+                     '--print', 'https://youtube.com/watch?v=%(id)s',
+                     f'ytsearch20:{query}'],
+                    capture_output=True, text=True, timeout=30,
+                )
+                urls = [u for u in resultado.stdout.strip().splitlines() if u.startswith('http')]
+
+            return urls
         except Exception as e:
             print(f"[YT] yt-dlp error: {e}")
             return []
