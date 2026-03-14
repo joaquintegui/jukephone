@@ -56,7 +56,7 @@ def main():
     am1_anterior          = False
     am2_anterior          = False
     hook_anterior         = False
-    modos_anteriores      = []
+    modos_anteriores      = hw.leer_modos()   # ignora el estado inicial del hardware
     loro_asterisco_activo = False
 
     print("=" * 40)
@@ -73,8 +73,9 @@ def main():
                 nuevos = [m for m in modos if m not in modos_anteriores]
 
                 if nuevos:
-                    if   2 in nuevos and 4 in modos:  music.subir_volumen()
-                    elif 3 in nuevos and 4 in modos:  music.bajar_volumen()
+                    print(f"[MAIN] Negros: {nuevos} (activos: {modos})")
+                    if   2 in nuevos and 4 in modos:     music.subir_volumen()
+                    elif 3 in nuevos and 4 in modos:     music.bajar_volumen()
                     elif 1 in nuevos and 4 not in modos: music.play_pause()
                     elif 2 in nuevos and 4 not in modos: music.siguiente()
                     elif 3 in nuevos and 4 not in modos: music.anterior()

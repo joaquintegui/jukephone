@@ -44,9 +44,9 @@ def _generar_wav(frecuencias, duracion, volumen=0.4):
     return tmp
 
 def _aplay(archivo, borrar=False):
-    """Siempre bloqueante — espera que termine antes de devolver"""
+    """Siempre bloqueante — usa DEVICE_TUBO para todos los sonidos de interfaz"""
     subprocess.run(
-        ['aplay', '-D', AUDIO_DEVICE_OUT, archivo],
+        ['aplay', '-D', DEVICE_TUBO, archivo],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
     )
     if borrar and os.path.exists(archivo):
@@ -83,16 +83,26 @@ def reproducir_wav(archivo):
     _aplay(archivo)
 
 def hablar(texto):
-    subprocess.run(
-        ['espeak', '-v', 'es', '-s', '140', '-a', '180', texto],
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+    """Bloqueante — espeak → aplay en DEVICE_TUBO"""
+    esp = subprocess.Popen(
+        ['espeak', '-v', 'es', '-s', '140', '-a', '180', '--stdout', texto],
+        stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
     )
+    subprocess.run(
+        ['aplay', '-D', DEVICE_TUBO],
+        stdin=esp.stdout, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+    )
+    esp.wait()
 
 def hablar_bg(texto):
-    """No bloqueante"""
+    """No bloqueante — espeak → aplay en DEVICE_TUBO"""
+    esp = subprocess.Popen(
+        ['espeak', '-v', 'es', '-s', '140', '-a', '180', '--stdout', texto],
+        stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
+    )
     subprocess.Popen(
-        ['espeak', '-v', 'es', '-s', '140', '-a', '180', texto],
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        ['aplay', '-D', DEVICE_TUBO],
+        stdin=esp.stdout, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
     )
 
 def grabar(archivo=None):
