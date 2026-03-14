@@ -8,6 +8,7 @@ import json
 import os
 import sys
 import threading
+import time
 from audio import beep, hablar_bg
 from youtube_client import YouTubeClient
 
@@ -34,6 +35,20 @@ def on_modo_desactivado():
     pass
 
 
+def _ring_loop(stop):
+    """Tono de llamada: dos pulsos cortos, pausa larga. Para cuando stop se activa."""
+    time.sleep(0.8)   # esperar que termine el espeak "Llamando a..."
+    while not stop.is_set():
+        beep(frecuencia=480, duracion=0.35)
+        if stop.is_set():
+            break
+        time.sleep(0.15)
+        beep(frecuencia=480, duracion=0.35)
+        if stop.is_set():
+            break
+        time.sleep(1.8)   # pausa entre timbrazos
+
+
 def on_numero_marcado(numero):
     print(f"[MÚSICA] Número: {numero}")
 
@@ -54,7 +69,12 @@ def on_numero_marcado(numero):
         print(f"[MÚSICA] Llamando a: {artista}")
         hablar_bg(f"Llamando a {artista}")
 
+        stop = threading.Event()
+        threading.Thread(target=_ring_loop, args=(stop,), daemon=True).start()
+
         ok, msg = _spotify.buscar_y_reproducir(artista)
+        stop.set()
+
         if ok:
             print(f"[MÚSICA] Reproduciendo: {msg}")
         else:
