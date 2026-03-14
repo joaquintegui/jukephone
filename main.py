@@ -73,10 +73,15 @@ def main():
                 nuevos = [m for m in modos if m not in modos_anteriores]
 
                 if nuevos:
+                    time.sleep(0.05)                     # deja que botones simultáneos se estabilicen
+                    modos  = hw.leer_modos()             # re-lee el estado final
+                    nuevos = [m for m in modos if m not in modos_anteriores]
                     print(f"[MAIN] Negros: {nuevos} (activos: {modos})")
                     if   2 in nuevos and 4 in modos:     music.subir_volumen()
                     elif 3 in nuevos and 4 in modos:     music.bajar_volumen()
-                    elif 1 in nuevos and 4 not in modos: music.play_pause()
+                    elif 1 in nuevos and 4 not in modos:
+                        print("[MAIN] → play_pause")
+                        music.play_pause()
                     elif 2 in nuevos and 4 not in modos: music.siguiente()
                     elif 3 in nuevos and 4 not in modos: music.anterior()
 
