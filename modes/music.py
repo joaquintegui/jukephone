@@ -9,7 +9,7 @@ import os
 import sys
 import threading
 import time
-from audio import beep, beep_en, hablar_bg, DEVICE_TUBO
+from audio import beep, beep_en, hablar, hablar_bg, DEVICE_TUBO
 from youtube_client import YouTubeClient
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -37,7 +37,7 @@ def on_modo_desactivado():
 
 def _ring_loop(stop):
     """Tono de llamada siempre en el tubo — así no conflictúa con mpv en el parlante."""
-    time.sleep(0.8)   # esperar que termine el espeak "Llamando a..."
+    print("[RING] Iniciando tono de llamada")
     while not stop.is_set():
         beep_en(DEVICE_TUBO, frecuencia=480, duracion=0.35)
         if stop.is_set():
@@ -67,13 +67,14 @@ def on_numero_marcado(numero):
             return False
 
         print(f"[MÚSICA] Llamando a: {artista}")
-        hablar_bg(f"Llamando a {artista}")
+        hablar(f"Llamando a {artista}")   # bloqueante — termina antes del ring
 
         stop = threading.Event()
         threading.Thread(target=_ring_loop, args=(stop,), daemon=True).start()
 
-        # yt-dlp busca mientras suena el ring en el tubo
+        print("[MÚSICA] Buscando en YouTube...")
         urls = _spotify.buscar_urls(artista)
+        print(f"[MÚSICA] URLs encontradas: {len(urls)}")
 
         if not urls:
             stop.set()
