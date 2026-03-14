@@ -71,9 +71,9 @@ class JukePhoneHardware:
         primera = self._scan_tecla()
         if not primera:
             return None
-        # Requiere 4 lecturas consecutivas idénticas con 60ms entre c/u (~240ms total)
+        # Requiere 4 lecturas consecutivas idénticas con 40ms entre c/u (~160ms total)
         for _ in range(3):
-            time.sleep(0.060)
+            time.sleep(0.040)
             if self._scan_tecla() != primera:
                 return None
         return primera
