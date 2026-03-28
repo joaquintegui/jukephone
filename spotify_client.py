@@ -13,6 +13,7 @@ CLIENT_ID     = '4cdfb58d330149eb9932bac6d0a71002'
 CLIENT_SECRET = 'c45dcbcb1d0144619fe880a7b80a7ef5'
 REDIRECT_URI  = 'http://127.0.0.1:8888/callback'
 SCOPE = (
+    'streaming '
     'user-read-playback-state '
     'user-modify-playback-state '
     'user-read-currently-playing'

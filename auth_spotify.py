@@ -12,6 +12,7 @@ CLIENT_ID     = os.environ.get('SPOTIPY_CLIENT_ID', '')
 REDIRECT_URI  = 'http://127.0.0.1:8888/callback'
 CACHE_PATH    = os.path.expanduser('~/.jukephone_spotify_cache')
 SCOPE = (
+    'streaming '
     'user-read-playback-state '
     'user-modify-playback-state '
     'user-read-currently-playing'
