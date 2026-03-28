@@ -18,7 +18,7 @@ SCOPE = (
     'user-read-currently-playing'
 )
 CACHE_PATH  = os.path.expanduser('~/.jukephone_spotify_cache')
-DEVICE_NAME = 'jukephone'
+DEVICE_NAME = 'jukebox'
 VOLUME_STEP = 10
 
 
