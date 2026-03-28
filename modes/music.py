@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 JukePhone - modes/music.py
-Modo música: marcar 8 dígitos → busca artista en database.json → reproduce en YouTube.
+Modo música: marcar 8 dígitos → busca artista en database.json → reproduce en Spotify.
 """
 
 import json
@@ -10,7 +10,7 @@ import sys
 import threading
 import time
 from audio import beep, beep_en, hablar, hablar_bg, DEVICE_TUBO
-from youtube_client import YouTubeClient
+from spotify_client import SpotifyClient
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 import sync_database
@@ -19,7 +19,7 @@ DB_PATH      = os.path.join(os.path.dirname(__file__), '..', 'database.json')
 VOLUME_STEP  = 10
 CODIGO_SYNC  = '12345678'
 
-_spotify = YouTubeClient()
+_spotify = SpotifyClient()
 
 
 def _cargar_database():
@@ -32,11 +32,11 @@ def on_modo_activado():
 
 
 def on_modo_desactivado():
-    pass
+    _spotify.parar()
 
 
 def _ring_loop(stop):
-    """Tono de llamada siempre en el tubo — así no conflictúa con mpv en el parlante."""
+    """Tono de llamada en el tubo mientras busca en Spotify."""
     print("[RING] Iniciando tono de llamada")
     while not stop.is_set():
         beep_en(DEVICE_TUBO, frecuencia=480, duracion=0.35)
@@ -72,26 +72,14 @@ def on_numero_marcado(numero):
         stop = threading.Event()
         threading.Thread(target=_ring_loop, args=(stop,), daemon=True).start()
 
-        print("[MÚSICA] Buscando en YouTube...")
-        urls = _spotify.buscar_urls(artista)
-        print(f"[MÚSICA] URLs encontradas: {len(urls)}")
-
-        if not urls:
-            stop.set()
-            print(f"[MÚSICA] Sin resultados para: {artista}")
-            beep(frecuencia=200, duracion=0.3)
-            return False
-
-        # Inicia mpv en el parlante — el ring sigue en el tubo sin conflicto
-        ok = _spotify.reproducir_urls(urls)
-        if ok:
-            # Espera que mpv empiece a reproducir de verdad, luego para el ring
-            _spotify.esperar_inicio(timeout=15)
-            print(f"[MÚSICA] Reproduciendo: {artista}")
+        print(f"[MÚSICA] Buscando en Spotify: {artista}")
+        ok, resultado = _spotify.buscar_y_reproducir(artista)
         stop.set()
 
-        if not ok:
-            print(f"[MÚSICA] Error iniciando mpv")
+        if ok:
+            print(f"[MÚSICA] Reproduciendo: {resultado}")
+        else:
+            print(f"[MÚSICA] Error: {resultado}")
             beep(frecuencia=200, duracion=0.3)
         return ok
 

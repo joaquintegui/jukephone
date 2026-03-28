@@ -1,41 +1,25 @@
 #!/usr/bin/env python3
 """
 JukePhone - spotify_client.py
-
-Setup inicial (una sola vez):
-  1. En https://developer.spotify.com/dashboard → tu app → Edit settings
-     Agregar redirect URI: http://127.0.0.1:8888/callback
-     (escribirlo manualmente y hacer clic en Add, luego Save)
-
-  2. Exportar credenciales en la Raspberry (agregar a ~/.bashrc):
-       export SPOTIPY_CLIENT_ID="tu_client_id"
-       export SPOTIPY_REDIRECT_URI="http://127.0.0.1:8888/callback"
-     (PKCE no necesita client_secret)
-     Luego: source ~/.bashrc
-
-  3. Correr una vez para autenticar:
-       python3 spotify_client.py
-     - Abre la URL que aparece en un navegador
-     - Spotify redirige a http://127.0.0.1:8888/callback?code=...
-       (puede mostrar "sitio no disponible" — eso es normal)
-     - Copiá la URL completa de la barra del navegador y pegala en la terminal
-
-  4. El token queda cacheado en ~/.jukephone_spotify_cache y se renueva solo.
+Token generado con auth_spotify.py en la Mac y copiado a la Pi.
+Se renueva automáticamente usando el refresh_token.
 """
 
 import os
 import spotipy
-from spotipy.oauth2 import SpotifyPKCE
+from spotipy.oauth2 import SpotifyOAuth
 
+CLIENT_ID     = '4cdfb58d330149eb9932bac6d0a71002'
+CLIENT_SECRET = 'c45dcbcb1d0144619fe880a7b80a7ef5'
+REDIRECT_URI  = 'http://127.0.0.1:8888/callback'
 SCOPE = (
     'user-read-playback-state '
     'user-modify-playback-state '
     'user-read-currently-playing'
 )
-CACHE_PATH   = os.path.expanduser('~/.jukephone_spotify_cache')
-REDIRECT_URI = 'http://127.0.0.1:8888/callback'
-DEVICE_NAME  = 'jukephone'
-VOLUME_STEP  = 10
+CACHE_PATH  = os.path.expanduser('~/.jukephone_spotify_cache')
+DEVICE_NAME = 'jukephone'
+VOLUME_STEP = 10
 
 
 class SpotifyClient:
@@ -46,10 +30,12 @@ class SpotifyClient:
 
     def _conectar(self):
         if self._sp is None:
-            self._sp = spotipy.Spotify(auth_manager=SpotifyPKCE(
+            self._sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
+                client_id=CLIENT_ID,
+                client_secret=CLIENT_SECRET,
+                redirect_uri=REDIRECT_URI,
                 scope=SCOPE,
                 cache_path=CACHE_PATH,
-                redirect_uri=REDIRECT_URI,
                 open_browser=False,
             ))
         return self._sp
@@ -74,8 +60,8 @@ class SpotifyClient:
             if not device_id:
                 return False, "Dispositivo no disponible"
 
-            results  = sp.search(q=f'artist:{query}', type='artist', limit=1)
-            artists  = results['artists']['items']
+            results = sp.search(q=f'artist:{query}', type='artist', limit=1)
+            artists = results['artists']['items']
             if not artists:
                 return False, "Artista no encontrado"
 
@@ -88,6 +74,15 @@ class SpotifyClient:
         except Exception as e:
             print(f"[SPOTIFY] Error: {e}")
             return False, str(e)
+
+    def parar(self):
+        try:
+            sp    = self._conectar()
+            state = sp.current_playback()
+            if state and state['is_playing']:
+                sp.pause_playback()
+        except Exception as e:
+            print(f"[SPOTIFY] parar error: {e}")
 
     def play_pause(self):
         try:
@@ -102,13 +97,13 @@ class SpotifyClient:
 
     def siguiente(self):
         try:
-            self._conectar().next_track()
+            self._conectar().next_track(device_id=self._device_id)
         except Exception as e:
             print(f"[SPOTIFY] siguiente error: {e}")
 
     def anterior(self):
         try:
-            self._conectar().previous_track()
+            self._conectar().previous_track(device_id=self._device_id)
         except Exception as e:
             print(f"[SPOTIFY] anterior error: {e}")
 
@@ -126,10 +121,8 @@ class SpotifyClient:
 
 
 if __name__ == '__main__':
-    print("Autenticando con Spotify...")
     client = SpotifyClient()
     sp     = client._conectar()
-    print(f"OK — token guardado en {CACHE_PATH}")
     devices = sp.devices()
     print("Dispositivos disponibles:")
     for d in devices['devices']:
