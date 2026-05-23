@@ -183,39 +183,39 @@ def _buscar_y_reproducir(driver, artista):
     from selenium.webdriver.support.ui import WebDriverWait
     from selenium.webdriver.support import expected_conditions as EC
 
+    from selenium.webdriver.common.action_chains import ActionChains
+
     try:
-        url = f'https://music.youtube.com/search?q={artista.replace(" ", "+")}'
-        driver.get(url)
+        # Buscar canciones directamente (evita errores con artistas/videos)
+        q = artista.replace(" ", "+")
+        driver.get(f'https://music.youtube.com/search?q={q}&filter=songs')
         wait = WebDriverWait(driver, 10)
 
-        # Buscar el primer resultado reproducible y hacer click
-        clicked = False
+        # Click real con ActionChains en el primer resultado
         try:
             first = wait.until(
-                EC.presence_of_element_located((By.TAG_NAME, 'ytmusic-responsive-list-item-renderer'))
+                EC.element_to_be_clickable((By.TAG_NAME, 'ytmusic-responsive-list-item-renderer'))
             )
-            driver.execute_script("arguments[0].click();", first)
+            driver.execute_script("arguments[0].scrollIntoView({block:'center'});", first)
+            time.sleep(0.3)
+            ActionChains(driver).move_to_element(first).click().perform()
             print(f"[YTM] Click en resultado: {artista}")
-            clicked = True
         except Exception as e:
             print(f"[YTM] Sin resultados para '{artista}': {e}")
             beep(frecuencia=200, duracion=0.3)
             return
 
-        if not clicked:
-            return
-
         # Esperar que aparezca el player bar y hacer click en play
         try:
             play_btn = WebDriverWait(driver, 8).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR,
+                EC.element_to_be_clickable((By.CSS_SELECTOR,
                     '#play-pause-button, '
                     '.play-pause-button, '
                     'tp-yt-paper-icon-button.play-pause-button'
                 ))
             )
             time.sleep(0.5)
-            driver.execute_script("arguments[0].click();", play_btn)
+            ActionChains(driver).move_to_element(play_btn).click().perform()
             print(f"[YTM] Play: {artista}")
         except Exception as e:
             print(f"[YTM] No encontré botón play, intentando con tecla: {e}")
