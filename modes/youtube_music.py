@@ -92,9 +92,15 @@ def _run_browser():
     opts.add_argument('--no-sandbox')
     opts.add_argument('--disable-dev-shm-usage')
     opts.add_argument('--autoplay-policy=no-user-gesture-required')
-    opts.binary_location = '/usr/bin/chromium-browser'
+    # Raspberry Pi OS Trixie: 'chromium' | versiones viejas: 'chromium-browser'
+    for candidate in ['/usr/bin/chromium', '/usr/bin/chromium-browser']:
+        if os.path.exists(candidate):
+            opts.binary_location = candidate
+            break
 
-    service = Service('/usr/bin/chromedriver')
+    # chromedriver: 'chromium-driver' (Trixie) | 'chromium-chromedriver' (legacy)
+    driver_path = '/usr/bin/chromedriver'
+    service = Service(driver_path)
 
     try:
         driver = webdriver.Chrome(service=service, options=opts)
