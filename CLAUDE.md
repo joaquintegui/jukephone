@@ -177,6 +177,44 @@ pip install RPi.GPIO --break-system-packages
 
 ---
 
+## Deploy automático (CI/CD)
+
+El deploy usa un **self-hosted runner de GitHub Actions** corriendo en la Pi.
+Cuando hacés `git push origin main`, la Pi pica el job, hace `git pull` y reinicia el servicio.
+
+### Setup inicial (una sola vez en la Pi)
+
+1. Ir a GitHub repo → **Settings → Actions → Runners → New self-hosted runner**
+2. Copiar el token que aparece (empieza con `A`)
+3. En la Pi:
+```bash
+cd ~/jukephone
+bash pi-setup.sh <TOKEN>
+```
+
+### Flujo normal de trabajo
+
+```bash
+# Desde cualquier lado (Claude Code, celular, lo que sea)
+git push origin main
+# → la Pi hace git pull + reinicia jukephone automáticamente
+```
+
+### Comandos útiles en la Pi
+
+```bash
+# Ver logs del jukephone
+journalctl -u jukephone -f
+
+# Ver estado del runner
+sudo ~/actions-runner/svc.sh status
+
+# Reiniciar manualmente
+sudo systemctl restart jukephone
+```
+
+---
+
 ## Pendientes
 
 - [ ] Integrar hook switch (colgar/descolgar auricular)
