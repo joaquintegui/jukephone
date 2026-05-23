@@ -20,7 +20,7 @@ import time
 sys.stdout.reconfigure(line_buffering=True)
 from hardware import JukePhoneHardware
 from audio import beep, beep_dtmf, set_salida, DEVICE_PARLANTE, DEVICE_TUBO
-from modes import music, parrot
+from modes import youtube_music as music, parrot
 import bluetooth_manager
 
 LONGITUD_NUMERO = 8
