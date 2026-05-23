@@ -74,7 +74,7 @@ def main():
                 nuevos = [m for m in modos if m not in modos_anteriores]
 
                 if nuevos:
-                    time.sleep(0.015)                     # deja que botones simultáneos se estabilicen
+                    time.sleep(0.008)                     # deja que botones simultáneos se estabilicen
                     modos  = hw.leer_modos()             # re-lee el estado final
                     nuevos = [m for m in modos if m not in modos_anteriores]
                     print(f"[MAIN] Negros: {nuevos} (activos: {modos})")
@@ -182,7 +182,7 @@ def main():
             if not tecla:
                 tecla_anterior = None
 
-            time.sleep(0.015)
+            time.sleep(0.008)
 
     except KeyboardInterrupt:
         print("\nApagando JukePhone...")
