@@ -88,10 +88,15 @@ def _run_browser():
     from selenium.webdriver.common.by import By
 
     opts = Options()
-    opts.add_argument(f'--user-data-dir={SESSION_DIR}')  # sesión persistente
+    opts.add_argument(f'--user-data-dir={SESSION_DIR}')  # sesión persistente entre reinicios
     opts.add_argument('--no-sandbox')
     opts.add_argument('--disable-dev-shm-usage')
     opts.add_argument('--autoplay-policy=no-user-gesture-required')
+    # Ocultar huella de automatización para que Google no bloquee el login
+    opts.add_argument('--disable-blink-features=AutomationControlled')
+    opts.add_experimental_option('excludeSwitches', ['enable-automation'])
+    opts.add_experimental_option('useAutomationExtension', False)
+
     # Raspberry Pi OS Trixie: 'chromium' | versiones viejas: 'chromium-browser'
     for candidate in ['/usr/bin/chromium', '/usr/bin/chromium-browser']:
         if os.path.exists(candidate):
@@ -99,14 +104,18 @@ def _run_browser():
             break
 
     # chromedriver: 'chromium-driver' (Trixie) | 'chromium-chromedriver' (legacy)
-    driver_path = '/usr/bin/chromedriver'
-    service = Service(driver_path)
+    service = Service('/usr/bin/chromedriver')
 
     try:
         driver = webdriver.Chrome(service=service, options=opts)
     except Exception as e:
         print(f"[YTM] Error lanzando Chromium: {e}")
         return
+
+    # Eliminar el flag navigator.webdriver que Google detecta
+    driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {
+        'source': 'Object.defineProperty(navigator, "webdriver", {get: () => undefined})'
+    })
 
     driver.get('https://music.youtube.com')
     _ready.set()
