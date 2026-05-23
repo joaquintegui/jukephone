@@ -50,9 +50,9 @@ PIN_AMARILLO_2 = 27   # Verde  → físico 13
 class JukePhoneHardware:
 
     def __init__(self):
+        GPIO.cleanup()
         GPIO.setmode(GPIO.BCM)
         GPIO.setwarnings(False)
-        GPIO.cleanup()
         self._setup()
 
     def _setup(self):
