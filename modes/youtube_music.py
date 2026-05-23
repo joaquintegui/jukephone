@@ -117,8 +117,8 @@ def _run_browser():
         'source': 'Object.defineProperty(navigator, "webdriver", {get: () => undefined})'
     })
 
+    _ready.set()  # Chromium listo — no esperamos a que cargue la página
     driver.get('https://music.youtube.com')
-    _ready.set()
 
     KEY_MAP = {
         'k':        'k',

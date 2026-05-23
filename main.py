@@ -52,7 +52,6 @@ def main():
     modo_actual           = None
     numero_marcado        = ''
     tecla_anterior        = None
-    ultimo_tiempo         = 0
     am1_anterior          = False
     am2_anterior          = False
     hook_anterior         = False
@@ -149,9 +148,8 @@ def main():
                     loro_asterisco_activo = False
                     parrot.detener_grabacion()
 
-            if tecla and (tecla != tecla_anterior or ahora - ultimo_tiempo > 0.3):
+            if tecla and tecla != tecla_anterior:
                 tecla_anterior = tecla
-                ultimo_tiempo  = ahora
 
                 try:
                     if modo_actual is None:
