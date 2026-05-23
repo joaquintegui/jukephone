@@ -45,9 +45,9 @@ PIN_HOOK     = 4
 
 # ── Setup GPIO ────────────────────────────────────────────────────────────────
 
+GPIO.cleanup()
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
-GPIO.cleanup()
 
 for pin in PINES_TECLADO.values():
     GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
