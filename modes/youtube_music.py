@@ -41,7 +41,7 @@ def on_modo_activado():
     if not _ready.is_set():
         print("[YTM] Esperando Chromium...")
         _ready.wait(timeout=60)
-    print("[YTM] Listo — marcá 8 dígitos para llamar un artista")
+    hablar_bg("Modo música")
 
 def on_modo_desactivado():
     print("[YTM] Cerrando...")
@@ -194,7 +194,7 @@ def _buscar_y_reproducir(driver, artista):
             first = wait.until(
                 EC.presence_of_element_located((By.TAG_NAME, 'ytmusic-responsive-list-item-renderer'))
             )
-            first.click()
+            driver.execute_script("arguments[0].click();", first)
             print(f"[YTM] Primer resultado: {artista}")
             time.sleep(2)
             driver.find_element(By.TAG_NAME, 'body').send_keys('k')
