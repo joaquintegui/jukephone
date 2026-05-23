@@ -12,30 +12,30 @@ import RPi.GPIO as GPIO
 # ── Pines ─────────────────────────────────────────────────────────────────────
 
 PINES_TECLADO = {
-    'Amarillo_t': 5,
-    'Marron':     6,
-    'Gris_t':     12,
-    'Azul_t':     13,
-    'Rojo_t':     19,
-    'Verde_t':    16,
-    'Violeta':    20,
-    'Naranja_t':  21,
-    'Negro_t':    25,
+    'AMA1':  5,   # pin 29
+    'AMA2':  6,   # pin 31
+    'GRIS1': 12,  # pin 32
+    'VIO':   13,  # pin 33
+    'MARRON':19,  # pin 35
+    'NARAN': 16,  # pin 36
+    'AZUL':  20,  # pin 38
+    'GRIS2': 21,  # pin 40
+    'ROJO':  25,  # pin 22
 }
 
 TECLAS = [
-    ('Amarillo_t', 'Naranja_t', '4'),
-    ('Amarillo_t', 'Verde_t',   '1'),
-    ('Amarillo_t', 'Azul_t',    '7'),
-    ('Rojo_t',     'Verde_t',   '3'),
-    ('Rojo_t',     'Naranja_t', '6'),
-    ('Rojo_t',     'Azul_t',    '9'),
-    ('Rojo_t',     'Negro_t',   '#'),
-    ('Azul_t',     'Violeta',   '8'),
-    ('Marron',     'Gris_t',    '*'),
-    ('Negro_t',    'Violeta',   '0'),
-    ('Verde_t',    'Violeta',   '2'),
-    ('Naranja_t',  'Violeta',   '5'),
+    ('AMA1',  'VIO',   '0'),
+    ('MARRON','GRIS1', '1'),
+    ('MARRON','VIO',   '2'),
+    ('AMA2',  'GRIS1', '3'),
+    ('AMA2',  'VIO',   '4'),
+    ('MARRON','NARAN', '5'),
+    ('AMA2',  'NARAN', '6'),
+    ('AZUL',  'GRIS1', '7'),
+    ('AZUL',  'VIO',   '8'),
+    ('AZUL',  'NARAN', '9'),
+    ('AMA1',  'NARAN', '#'),
+    ('GRIS2', 'ROJO',  '*'),
 ]
 
 PIN_NEGROS   = {1: 23, 2: 24, 3: 26, 4: 9}
