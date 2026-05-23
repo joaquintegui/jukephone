@@ -38,7 +38,8 @@ TECLAS = [
 PIN_MODO = {1: 23, 2: 24, 3: 26, 4: 9}
 
 # ── Hook switch ───────────────────────────────────────────────────────────────
-PIN_HOOK = 4  # Verde → físico 7 | Negro → GND físico 6
+PIN_HOOK     = 4   # Verde → físico 7
+PIN_HOOK_GND = 14  # Negro → físico 8 (configurado como OUTPUT LOW)
 
 # ── Botones amarillos ─────────────────────────────────────────────────────────
 PIN_AMARILLO_1 = 17   # Blanco → físico 11
@@ -65,6 +66,8 @@ class JukePhoneHardware:
         GPIO.setup(PIN_AMARILLO_1, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         GPIO.setup(PIN_AMARILLO_2, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         # Hook
+        GPIO.setup(PIN_HOOK_GND, GPIO.OUT)
+        GPIO.output(PIN_HOOK_GND, GPIO.LOW)
         GPIO.setup(PIN_HOOK, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
     def leer_tecla(self):
