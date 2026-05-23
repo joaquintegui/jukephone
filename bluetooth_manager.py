@@ -70,6 +70,8 @@ def _find_sink(keyword):
 
 
 def switch_to_bluetooth():
+    if not BT_MAC:
+        return False
     sink = _find_sink('bluez')
     if sink:
         _run('pactl', 'set-default-sink', sink)
@@ -80,6 +82,8 @@ def switch_to_bluetooth():
 
 
 def switch_to_handset():
+    if not BT_MAC:
+        return False
     sink = _find_sink('usb') or _find_sink('hf-001d')
     if sink:
         _run('pactl', 'set-default-sink', sink)
