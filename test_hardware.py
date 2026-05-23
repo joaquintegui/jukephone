@@ -42,6 +42,7 @@ PIN_NEGROS   = {1: 23, 2: 24, 3: 26, 4: 9}
 PIN_AM1      = 17
 PIN_AM2      = 27
 PIN_HOOK     = 4
+PIN_HOOK_GND = 14
 
 # ── Setup GPIO ────────────────────────────────────────────────────────────────
 
@@ -53,9 +54,11 @@ for pin in PINES_TECLADO.values():
     GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 for pin in PIN_NEGROS.values():
     GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.setup(PIN_AM1,  GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.setup(PIN_AM2,  GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.setup(PIN_HOOK, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(PIN_AM1,      GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(PIN_AM2,      GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(PIN_HOOK_GND, GPIO.OUT)
+GPIO.output(PIN_HOOK_GND, GPIO.LOW)
+GPIO.setup(PIN_HOOK,     GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
