@@ -188,39 +188,44 @@ def _buscar_y_reproducir(driver, artista):
         driver.get(url)
         wait = WebDriverWait(driver, 10)
 
-        # Intentar click en sección de artista → shuffle
-        try:
-            artist_card = wait.until(
-                EC.presence_of_element_located((By.TAG_NAME, 'ytmusic-card-shelf-renderer'))
-            )
-            # Buscar botón shuffle dentro de la card
-            btns = artist_card.find_elements(By.TAG_NAME, 'button')
-            for btn in btns:
-                label = btn.get_attribute('aria-label') or ''
-                if 'shuffle' in label.lower() or 'mezcl' in label.lower():
-                    btn.click()
-                    print(f"[YTM] Shuffle: {artista}")
-                    time.sleep(2)
-                    driver.find_element(By.TAG_NAME, 'body').send_keys('k')
-                    return
-            # Si no hay shuffle, click en la card
-            artist_card.click()
-            print(f"[YTM] Abriendo artista: {artista}")
-        except:
-            pass
-
-        # Fallback: primer resultado de la lista
+        # Buscar el primer resultado reproducible y hacer click
+        clicked = False
         try:
             first = wait.until(
                 EC.presence_of_element_located((By.TAG_NAME, 'ytmusic-responsive-list-item-renderer'))
             )
             driver.execute_script("arguments[0].click();", first)
-            print(f"[YTM] Primer resultado: {artista}")
-            time.sleep(2)
-            _js_key(driver, 'k')
+            print(f"[YTM] Click en resultado: {artista}")
+            clicked = True
         except Exception as e:
             print(f"[YTM] Sin resultados para '{artista}': {e}")
             beep(frecuencia=200, duracion=0.3)
+            return
+
+        if not clicked:
+            return
+
+        # Esperar que aparezca el player bar y hacer click en play
+        try:
+            play_btn = WebDriverWait(driver, 8).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR,
+                    '#play-pause-button, '
+                    '.play-pause-button, '
+                    'tp-yt-paper-icon-button.play-pause-button'
+                ))
+            )
+            time.sleep(0.5)
+            driver.execute_script("arguments[0].click();", play_btn)
+            print(f"[YTM] Play: {artista}")
+        except Exception as e:
+            print(f"[YTM] No encontré botón play, intentando con tecla: {e}")
+            time.sleep(3)
+            # Último recurso: send_keys real al body
+            try:
+                driver.find_element(By.TAG_NAME, 'body').click()
+                driver.find_element(By.TAG_NAME, 'body').send_keys('k')
+            except:
+                pass
 
     except Exception as e:
         print(f"[YTM] Error buscando '{artista}': {e}")
