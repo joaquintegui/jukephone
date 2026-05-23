@@ -66,7 +66,6 @@ def scan_tecla():
         GPIO.setup(pin_a, GPIO.OUT)
         GPIO.output(pin_a, GPIO.LOW)
         GPIO.setup(pin_b, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        time.sleep(0.010)
         detectado = GPIO.input(pin_b) == GPIO.LOW
         GPIO.output(pin_a, GPIO.HIGH)
         GPIO.setup(pin_a, GPIO.IN, pull_up_down=GPIO.PUD_UP)
@@ -74,23 +73,12 @@ def scan_tecla():
             return tecla
     return None
 
-def leer_tecla():
-    primera = scan_tecla()
-    if not primera:
-        return None
-    for _ in range(3):
-        time.sleep(0.040)
-        if scan_tecla() != primera:
-            return None
-    return primera
-
 def negros_activos():
     return [n for n, pin in PIN_NEGROS.items() if GPIO.input(pin) == GPIO.LOW]
 
 # ── Estado previo ─────────────────────────────────────────────────────────────
 
 tecla_anterior  = None
-ultimo_tecla    = 0
 negros_prev     = []
 am1_prev        = False
 am2_prev        = False
@@ -107,16 +95,12 @@ print(f"[HOOK] Estado inicial: {estado_inicial_hook}")
 
 try:
     while True:
-        ahora = time.time()
-
         # Teclado
-        tecla = leer_tecla()
-        if tecla and (tecla != tecla_anterior or ahora - ultimo_tecla > 0.3):
-            print(f"[TECLADO]   '{tecla}'")
+        tecla = scan_tecla()
+        if tecla != tecla_anterior:
+            if tecla:
+                print(f"[TECLADO]   '{tecla}'")
             tecla_anterior = tecla
-            ultimo_tecla   = ahora
-        if not tecla:
-            tecla_anterior = None
 
         # Botones negros
         negros = negros_activos()
@@ -151,8 +135,6 @@ try:
         elif not hook and hook_prev:
             print("[HOOK]       auricular COLGADO")
         hook_prev = hook
-
-        time.sleep(0.05)
 
 except KeyboardInterrupt:
     print("\nTest terminado.")
