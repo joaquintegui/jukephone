@@ -70,8 +70,8 @@ def scan_tecla():
         GPIO.output(pin_a, GPIO.HIGH)
         GPIO.setup(pin_a, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         if detectado:
-            return tecla
-    return None
+            return tecla, cable_a, cable_b
+    return None, None, None
 
 def negros_activos():
     return [n for n, pin in PIN_NEGROS.items() if GPIO.input(pin) == GPIO.LOW]
@@ -96,10 +96,10 @@ print(f"[HOOK] Estado inicial: {estado_inicial_hook}")
 try:
     while True:
         # Teclado
-        tecla = scan_tecla()
+        tecla, ca, cb = scan_tecla()
         if tecla != tecla_anterior:
             if tecla:
-                print(f"[TECLADO]   '{tecla}'")
+                print(f"[TECLADO]   '{tecla}'  ({ca} — {cb})")
             tecla_anterior = tecla
 
         # Botones negros
