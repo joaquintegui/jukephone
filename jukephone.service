@@ -1,0 +1,16 @@
+[Unit]
+Description=JukePhone
+After=network.target sound.target bluetooth.target
+
+[Service]
+Type=simple
+User=joaquin
+WorkingDirectory=/home/joaquin/jukephone
+ExecStart=/usr/bin/python3 /home/joaquin/jukephone/main.py
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
