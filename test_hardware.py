@@ -82,7 +82,7 @@ tecla_anterior  = None
 negros_prev     = []
 am1_prev        = False
 am2_prev        = False
-hook_prev       = GPIO.input(PIN_HOOK) == GPIO.LOW
+hook_prev       = GPIO.input(PIN_HOOK) == GPIO.HIGH
 
 print("=" * 42)
 print("  JukePhone — Test de hardware")
@@ -129,7 +129,7 @@ try:
         am2_prev = am2
 
         # Hook switch
-        hook = GPIO.input(PIN_HOOK) == GPIO.LOW
+        hook = GPIO.input(PIN_HOOK) == GPIO.HIGH
         if hook and not hook_prev:
             print("[HOOK]       auricular DESCOLGADO")
         elif not hook and hook_prev:
