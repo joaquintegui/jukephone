@@ -104,7 +104,7 @@ class JukePhoneHardware:
         return GPIO.input(PIN_AMARILLO_2) == GPIO.LOW
 
     def auricular_descolgado(self):
-        return GPIO.input(PIN_HOOK) == GPIO.LOW
+        return GPIO.input(PIN_HOOK) == GPIO.HIGH
 
     def cleanup(self):
         GPIO.cleanup()
