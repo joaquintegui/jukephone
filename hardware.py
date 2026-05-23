@@ -74,9 +74,8 @@ class JukePhoneHardware:
         primera = self._scan_tecla()
         if not primera:
             return None
-        # Requiere 4 lecturas consecutivas idénticas con 40ms entre c/u (~160ms total)
-        for _ in range(3):
-            time.sleep(0.040)
+        for _ in range(2):
+            time.sleep(0.015)
             if self._scan_tecla() != primera:
                 return None
         return primera
@@ -107,7 +106,7 @@ class JukePhoneHardware:
         return GPIO.input(PIN_AMARILLO_2) == GPIO.LOW
 
     def auricular_descolgado(self):
-        return GPIO.input(PIN_HOOK) == GPIO.HIGH
+        return GPIO.input(PIN_HOOK) == GPIO.LOW
 
     def cleanup(self):
         GPIO.cleanup()
