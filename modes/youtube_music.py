@@ -42,7 +42,9 @@ def on_modo_activado():
     if not _ready.is_set():
         print("[YTM] Esperando Chromium...")
         _ready.wait(timeout=60)
-    hablar_bg("Modo música")
+    print("[YTM] Modo música activo")
+    beep(frecuencia=880, duracion=0.1)
+    beep(frecuencia=1100, duracion=0.1)
 
 def on_modo_desactivado():
     print("[YTM] Cerrando...")
@@ -68,7 +70,6 @@ def on_numero_marcado(numero):
         return
 
     print(f"[YTM] Llamando a: {artista}")
-    hablar(f"Llamando a {artista}")
     _stop_ring.clear()
     threading.Thread(target=_ring_loop, daemon=True).start()
     _q.put(('search', artista))
