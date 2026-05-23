@@ -24,16 +24,24 @@ _thread = None
 
 # ── Interface pública ──────────────────────────────────────────────────────────
 
-def on_modo_activado():
+def precalentar():
+    """Inicia Chromium en background al arrancar main.py, sin bloquear."""
     global _thread
-    print("[YTM] Iniciando Chromium...")
-    _ready.clear()
+    if _thread and _thread.is_alive():
+        return
+    print("[YTM] Precalentando Chromium...")
     _thread = threading.Thread(target=_run_browser, daemon=True)
     _thread.start()
-    if _ready.wait(timeout=40):
-        print("[YTM] Listo — marcá 8 dígitos para llamar un artista")
-    else:
-        print("[YTM] Timeout — Chromium tardó demasiado")
+
+def on_modo_activado():
+    global _thread
+    if not (_thread and _thread.is_alive()):
+        _thread = threading.Thread(target=_run_browser, daemon=True)
+        _thread.start()
+    if not _ready.is_set():
+        print("[YTM] Esperando Chromium...")
+        _ready.wait(timeout=60)
+    print("[YTM] Listo — marcá 8 dígitos para llamar un artista")
 
 def on_modo_desactivado():
     print("[YTM] Cerrando...")
@@ -172,11 +180,12 @@ def _buscar_y_reproducir(driver, artista):
                 if 'shuffle' in label.lower() or 'mezcl' in label.lower():
                     btn.click()
                     print(f"[YTM] Shuffle: {artista}")
+                    time.sleep(2)
+                    driver.find_element(By.TAG_NAME, 'body').send_keys('k')
                     return
             # Si no hay shuffle, click en la card
             artist_card.click()
             print(f"[YTM] Abriendo artista: {artista}")
-            return
         except:
             pass
 
@@ -187,6 +196,8 @@ def _buscar_y_reproducir(driver, artista):
             )
             first.click()
             print(f"[YTM] Primer resultado: {artista}")
+            time.sleep(2)
+            driver.find_element(By.TAG_NAME, 'body').send_keys('k')
         except Exception as e:
             print(f"[YTM] Sin resultados para '{artista}': {e}")
             beep(frecuencia=200, duracion=0.3)
