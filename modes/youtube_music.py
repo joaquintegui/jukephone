@@ -9,7 +9,7 @@ import queue
 import threading
 import time
 from pathlib import Path
-from audio import beep, hablar, hablar_bg
+from audio import beep, beep_en, hablar, hablar_bg, DEVICE_TUBO
 
 os.environ.setdefault('DISPLAY', ':0')
 
@@ -17,9 +17,10 @@ DB_PATH      = Path(__file__).parent.parent / 'database.json'
 SESSION_DIR  = Path.home() / '.ytm_profile'
 CODIGO_SYNC  = '12345678'
 
-_q      = queue.Queue()
-_ready  = threading.Event()
-_thread = None
+_q         = queue.Queue()
+_ready     = threading.Event()
+_thread    = None
+_stop_ring = threading.Event()
 
 
 # ── Interface pública ──────────────────────────────────────────────────────────
@@ -68,6 +69,8 @@ def on_numero_marcado(numero):
 
     print(f"[YTM] Llamando a: {artista}")
     hablar(f"Llamando a {artista}")
+    _stop_ring.clear()
+    threading.Thread(target=_ring_loop, daemon=True).start()
     _q.put(('search', artista))
 
 def play_pause():
@@ -84,6 +87,16 @@ def subir_volumen():
 
 def bajar_volumen():
     _q.put(('key', 'shift+down'))
+
+
+def _ring_loop():
+    while not _stop_ring.is_set():
+        beep_en(DEVICE_TUBO, frecuencia=480, duracion=0.35)
+        if _stop_ring.wait(timeout=0.15):
+            break
+        beep_en(DEVICE_TUBO, frecuencia=480, duracion=0.35)
+        if _stop_ring.wait(timeout=1.8):
+            break
 
 
 # ── Browser loop ───────────────────────────────────────────────────────────────
@@ -150,13 +163,20 @@ def _run_browser():
             break
         elif cmd == 'key':
             try:
-                body = driver.find_element(By.TAG_NAME, 'body')
-                body.send_keys(KEY_MAP.get(arg, arg))
+                _js_key(driver, KEY_MAP.get(arg, arg))
             except Exception as e:
                 print(f"[YTM] Error tecla {arg}: {e}")
         elif cmd == 'search':
             _buscar_y_reproducir(driver, arg)
+            _stop_ring.set()
 
+
+def _js_key(driver, key):
+    driver.execute_script(
+        "document.dispatchEvent(new KeyboardEvent('keydown', "
+        "{'key': arguments[0], 'bubbles': true, 'cancelable': true}));",
+        key
+    )
 
 def _buscar_y_reproducir(driver, artista):
     from selenium.webdriver.common.by import By
@@ -197,7 +217,7 @@ def _buscar_y_reproducir(driver, artista):
             driver.execute_script("arguments[0].click();", first)
             print(f"[YTM] Primer resultado: {artista}")
             time.sleep(2)
-            driver.find_element(By.TAG_NAME, 'body').send_keys('k')
+            _js_key(driver, 'k')
         except Exception as e:
             print(f"[YTM] Sin resultados para '{artista}': {e}")
             beep(frecuencia=200, duracion=0.3)
